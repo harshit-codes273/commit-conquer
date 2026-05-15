@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // packages/server/index.ts
 //
 // Express REST API server — wires all modules into HTTP endpoints.
@@ -26,6 +27,9 @@
 // ─── Integration with existing files ─────────────────────────────────────────
 //   All imports below pull directly from your existing module services.
 //   Nothing in the service files needs to change.
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 
 import express, {
   type Request,
@@ -36,9 +40,27 @@ import express, {
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import "dotenv/config";
+import path from "path";
+import dotenv from "dotenv";
+dotenv.config({ path: path.join(__dirname, ".env") });
 
-// ── Module Services (all already exist in your repo) ──────────────────────────
+
+// ─── Env Validation ───────────────────────────────────────────────────────────
+const REQUIRED_ENV_VARS = ["STRIPE_KEY", "DB_URL"];
+const missingVars = REQUIRED_ENV_VARS.filter(v => !process.env[v]);
+
+if (missingVars.length > 0) {
+  console.error(`
+  ❌ ERROR: Missing required environment variables:
+     ${missingVars.join(", ")}
+
+     The server cannot start without these. Please check your .env file.
+  `);
+  process.exit(1);
+}
+
+
+
 import { ProductService, ServiceError } from "../modules/products/product.service.ts";
 import { AuthService }     from "../modules/auth/auth.service.ts";
 import { CartService }     from "../modules/cart/cart.service.ts";
@@ -49,12 +71,12 @@ import { DiscountService } from "../modules/discounts/discount.service.ts";
 import { ShippingService } from "../modules/shipping/shipping.service.ts";
 import { eventBus, EVENT } from "../core/event-bus.ts";
 
-// ─── App bootstrap ────────────────────────────────────────────────────────────
+
 
 const app  = express();
 const PORT = parseInt(process.env.PORT ?? "4000", 10);
 
-// ─── Middleware ───────────────────────────────────────────────────────────────
+
 
 app.use(helmet());
 app.use(cors({
@@ -66,8 +88,7 @@ app.use(cors({
 app.use(express.json({ limit: "2mb" }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
-// ─── Auth middleware ───────────────────────────────────────────────────────────
-// Reads Bearer token from Authorization header and attaches customer to req.
+
 
 declare global {
   namespace Express {
@@ -91,20 +112,20 @@ const authenticate: RequestHandler = (req, res, next) => {
   }
 };
 
-// Soft auth — attaches customer if token present, but doesn't block if missing.
+
 const softAuthenticate: RequestHandler = (req, _res, next) => {
   const header = req.headers.authorization;
   if (header?.startsWith("Bearer ")) {
     try {
       req.customer = AuthService.validateToken(header.slice(7));
     } catch {
-      // token invalid / expired — silently ignore for soft auth
+      
     }
   }
   next();
 };
 
-// Admin middleware — checks X-Admin-Secret header.
+
 const adminOnly: RequestHandler = (req, res, next) => {
   const secret = req.headers["x-admin-secret"];
   if (secret !== process.env.ADMIN_SECRET && process.env.NODE_ENV !== "development") {
@@ -114,7 +135,7 @@ const adminOnly: RequestHandler = (req, res, next) => {
   next();
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 
 function err(code: string, message: string) {
   return { error: { code, message } };
@@ -155,7 +176,7 @@ const STATUS_MAP: Record<string, number> = {
   INTERNAL_ERROR:       500,
 };
 
-// ─── Health check ─────────────────────────────────────────────────────────────
+
 
 app.get("/health", (_req, res) => {
   res.json({
@@ -166,6 +187,7 @@ app.get("/health", (_req, res) => {
   });
 });
 
+<<<<<<< HEAD
 // ══════════════════════════════════════════════════════════════════════════════
 // STORE ROUTES  /api/v1/store/*
 // Public-facing storefront endpoints
@@ -173,11 +195,19 @@ app.get("/health", (_req, res) => {
 
 const store = express.Router();
 app.use("/api/v1/store", store);
+=======
+const store = express.Router();
+app.use("/api/v1/store", store);
 
-// ── Products ──────────────────────────────────────────────────────────────────
 
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
+
+
+<<<<<<< HEAD
 // GET /api/v1/store/products
 // Query: offset, limit, category, search, sort, status
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.get("/products", (req, res) => {
   try {
     const result = ProductService.list({
@@ -192,7 +222,11 @@ store.get("/products", (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // GET /api/v1/store/products/:id
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.get("/products/:id", (req, res) => {
   try {
     const product = ProductService.getById(req.params.id);
@@ -200,8 +234,13 @@ store.get("/products/:id", (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // GET /api/v1/store/products/handle/:handle
 // Used by [handle]/page.tsx
+=======
+
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.get("/products/handle/:handle", (req, res) => {
   try {
     const product = ProductService.getByHandle(req.params.handle);
@@ -209,17 +248,23 @@ store.get("/products/handle/:handle", (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // GET /api/v1/store/products/categories
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.get("/categories", (_req, res) => {
   try {
     res.json({ categories: ProductService.categories() });
   } catch (e) { handleErr(e, res); }
 });
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 // POST /api/v1/store/auth/register
 // Body: { email, password, first_name, last_name, phone? }
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.post("/auth/register", async (req, res) => {
   try {
     const result = await AuthService.register(req.body);
@@ -227,8 +272,12 @@ store.post("/auth/register", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/store/auth/login
 // Body: { email, password }
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.post("/auth/login", async (req, res) => {
   try {
     const result = await AuthService.login(req.body);
@@ -236,8 +285,11 @@ store.post("/auth/login", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/store/auth/logout
 // Header: Authorization: Bearer <token>
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.post("/auth/logout", authenticate, async (req, res) => {
   try {
     const token = req.headers.authorization!.slice(7);
@@ -246,14 +298,20 @@ store.post("/auth/logout", authenticate, async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // GET /api/v1/store/auth/me
 // Header: Authorization: Bearer <token>
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.get("/auth/me", authenticate, (req, res) => {
   res.json({ customer: req.customer });
 });
 
+<<<<<<< HEAD
 // PATCH /api/v1/store/auth/me
 // Body: { first_name?, last_name?, phone? }
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.patch("/auth/me", authenticate, async (req, res) => {
   try {
     const updated = await AuthService.updateProfile(req.customer!.id, req.body);
@@ -261,8 +319,11 @@ store.patch("/auth/me", authenticate, async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/store/auth/reset-password/request
 // Body: { email }
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.post("/auth/reset-password/request", async (req, res) => {
   try {
     const result = await AuthService.requestPasswordReset(req.body.email);
@@ -270,8 +331,11 @@ store.post("/auth/reset-password/request", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/store/auth/reset-password/confirm
 // Body: { reset_token, new_password }
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.post("/auth/reset-password/confirm", async (req, res) => {
   try {
     await AuthService.confirmPasswordReset(req.body.reset_token, req.body.new_password);
@@ -279,8 +343,11 @@ store.post("/auth/reset-password/confirm", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/store/auth/google
 // Body: { credential: google_id_token }
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.post("/auth/google", async (req, res) => {
   try {
     const result = await AuthService.googleLogin(req.body.credential);
@@ -288,11 +355,13 @@ store.post("/auth/google", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// ── Cart ──────────────────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 // POST /api/v1/store/carts
 // Body: { email? }
 // Returns the new cart. Store cart.id in frontend (localStorage / cookie).
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.post("/carts", softAuthenticate, async (req, res) => {
   try {
     const cart = await CartService.create(req.body.email ?? req.customer?.email);
@@ -300,7 +369,11 @@ store.post("/carts", softAuthenticate, async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // GET /api/v1/store/carts/:id
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.get("/carts/:id", (req, res) => {
   try {
     const cart = CartService.get(req.params.id);
@@ -308,8 +381,11 @@ store.get("/carts/:id", (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/store/carts/:id/items
 // Body: { product_id, variant_id, quantity? }
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.post("/carts/:id/items", async (req, res) => {
   try {
     const { product_id, variant_id, quantity = 1 } = req.body;
@@ -318,7 +394,11 @@ store.post("/carts/:id/items", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // DELETE /api/v1/store/carts/:id/items/:lineId
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.delete("/carts/:id/items/:lineId", async (req, res) => {
   try {
     const cart = await CartService.removeItem(req.params.id, req.params.lineId);
@@ -326,8 +406,11 @@ store.delete("/carts/:id/items/:lineId", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // PATCH /api/v1/store/carts/:id/items/:lineId
 // Body: { quantity }
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.patch("/carts/:id/items/:lineId", async (req, res) => {
   try {
     const cart = await CartService.updateQuantity(
@@ -339,8 +422,11 @@ store.patch("/carts/:id/items/:lineId", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/store/carts/:id/discount
 // Body: { code }
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.post("/carts/:id/discount", async (req, res) => {
   try {
     const cart = await CartService.applyDiscount(req.params.id, req.body.code);
@@ -348,7 +434,11 @@ store.post("/carts/:id/discount", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // DELETE /api/v1/store/carts/:id/discount
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.delete("/carts/:id/discount", async (req, res) => {
   try {
     const cart = await CartService.removeDiscount(req.params.id);
@@ -356,8 +446,11 @@ store.delete("/carts/:id/discount", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // PATCH /api/v1/store/carts/:id/email
 // Body: { email }
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.patch("/carts/:id/email", async (req, res) => {
   try {
     const cart = await CartService.setEmail(req.params.id, req.body.email);
@@ -365,8 +458,11 @@ store.patch("/carts/:id/email", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // PATCH /api/v1/store/carts/:id/shipping-address
 // Body: Address object
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.patch("/carts/:id/shipping-address", async (req, res) => {
   try {
     const cart = await CartService.setShippingAddress(req.params.id, req.body);
@@ -374,7 +470,11 @@ store.patch("/carts/:id/shipping-address", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // PATCH /api/v1/store/carts/:id/billing-address
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.patch("/carts/:id/billing-address", async (req, res) => {
   try {
     const cart = await CartService.setBillingAddress(req.params.id, req.body);
@@ -382,7 +482,10 @@ store.patch("/carts/:id/billing-address", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // GET /api/v1/store/carts/:id/summary
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.get("/carts/:id/summary", (req, res) => {
   try {
     const summary = CartService.summary(req.params.id);
@@ -390,10 +493,12 @@ store.get("/carts/:id/summary", (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// ── Shipping Options ──────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 // GET /api/v1/store/shipping-options
 // Query: cart_id (optional, for cart-specific rates)
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.get("/shipping-options", async (req, res) => {
   try {
     const options = await ShippingService.listOptions();
@@ -401,11 +506,13 @@ store.get("/shipping-options", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// ── Orders ────────────────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 // POST /api/v1/store/orders
 // Body: { cart_id, payment_provider? }
 // Converts a completed cart into an order
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.post("/orders", softAuthenticate, async (req, res) => {
   try {
     const order = await OrderService.place(req.body);
@@ -413,12 +520,15 @@ store.post("/orders", softAuthenticate, async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // GET /api/v1/store/orders/:id
 // Requires auth — customers can only see their own orders
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.get("/orders/:id", authenticate, (req, res) => {
   try {
   const order = OrderService.getById(String(req.params.id));
-    // Customers can only view their own orders
+    
     if (order.customer_id && order.customer_id !== req.customer!.id) {
       res.status(403).json(err("FORBIDDEN", "Access denied"));
       return;
@@ -427,8 +537,11 @@ store.get("/orders/:id", authenticate, (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // GET /api/v1/store/customers/me/orders
 // List the logged-in customer's orders
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.get("/customers/me/orders", authenticate, (req, res) => {
   try {
     const result = OrderService.list({ customer_id: req.customer!.id });
@@ -436,11 +549,13 @@ store.get("/customers/me/orders", authenticate, (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// ── Payment ───────────────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 // POST /api/v1/store/payment/initiate
 // Body: { order_id, amount, currency?, provider?, customer_email? }
 // Returns payment session with Stripe client_secret (if using Stripe)
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.post("/payment/initiate", async (req, res) => {
   try {
     const session = await PaymentService.initiate(req.body);
@@ -448,8 +563,11 @@ store.post("/payment/initiate", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/store/payment/capture
 // Body: { session_id, order_id }
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.post("/payment/capture", async (req, res) => {
   try {
     const session = await PaymentService.capture(req.body);
@@ -457,9 +575,11 @@ store.post("/payment/capture", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// ── Inventory ─────────────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 // GET /api/v1/store/inventory/:variantId
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 store.get("/inventory/:variantId", (req, res) => {
   try {
     const item = InventoryService.getByVariant(req.params.variantId);
@@ -467,6 +587,7 @@ store.get("/inventory/:variantId", (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // ══════════════════════════════════════════════════════════════════════════════
 // ADMIN ROUTES  /api/v1/admin/*
 // All admin routes require the X-Admin-Secret header.
@@ -475,10 +596,19 @@ store.get("/inventory/:variantId", (req, res) => {
 const admin = express.Router();
 admin.use(adminOnly);
 app.use("/api/v1/admin", admin);
+=======
+const admin = express.Router();
+admin.use(adminOnly);
+app.use("/api/v1/admin", admin);
 
-// ── Dashboard stats ───────────────────────────────────────────────────────────
 
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
+
+
+<<<<<<< HEAD
 // GET /api/v1/admin/stats
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.get("/stats", (_req, res) => {
   try {
     const products = ProductService.stats();
@@ -487,10 +617,12 @@ admin.get("/stats", (_req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// ── Products (admin) ──────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 // GET /api/v1/admin/products
 // Query: offset, limit, status (all|published|draft), category, search, sort
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.get("/products", (req, res) => {
   try {
     const result = ProductService.list({
@@ -505,15 +637,22 @@ admin.get("/products", (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // GET /api/v1/admin/products/:id
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.get("/products/:id", (req, res) => {
   try {
     res.json({ product: ProductService.getById(req.params.id) });
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/admin/products
 // Body: CreateProductInput
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.post("/products", async (req, res) => {
   try {
     const product = await ProductService.create(req.body);
@@ -521,8 +660,11 @@ admin.post("/products", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // PATCH /api/v1/admin/products/:id
 // Body: UpdateProductInput (partial)
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.patch("/products/:id", async (req, res) => {
   try {
     const product = await ProductService.update(req.params.id, req.body);
@@ -530,7 +672,10 @@ admin.patch("/products/:id", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // DELETE /api/v1/admin/products/:id
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.delete("/products/:id", async (req, res) => {
   try {
     const result = await ProductService.delete(req.params.id);
@@ -538,8 +683,11 @@ admin.delete("/products/:id", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // DELETE /api/v1/admin/products  (bulk)
 // Body: { ids: string[] }
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.delete("/products", async (req, res) => {
   try {
     const result = await ProductService.bulkDelete(req.body.ids);
@@ -547,7 +695,11 @@ admin.delete("/products", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/admin/products/:id/publish
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.post("/products/:id/publish", async (req, res) => {
   try {
     const product = await ProductService.publish(req.params.id);
@@ -555,7 +707,11 @@ admin.post("/products/:id/publish", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/admin/products/:id/unpublish
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.post("/products/:id/unpublish", async (req, res) => {
   try {
     const product = await ProductService.unpublish(req.params.id);
@@ -563,8 +719,11 @@ admin.post("/products/:id/unpublish", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // PATCH /api/v1/admin/products/:id/inventory
 // Body: { variant_id, delta }  (delta can be negative to decrement)
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.patch("/products/:id/inventory", async (req, res) => {
   try {
     const { variant_id, delta } = req.body;
@@ -573,10 +732,12 @@ admin.patch("/products/:id/inventory", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// ── Orders (admin) ────────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 // GET /api/v1/admin/orders
 // Query: offset, limit, status, search, sort
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.get("/orders", (req, res) => {
   try {
     const result = OrderService.list({
@@ -590,14 +751,22 @@ admin.get("/orders", (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // GET /api/v1/admin/orders/:id
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.get("/orders/:id", (req, res) => {
   try {
     res.json({ order: OrderService.getById(req.params.id) });
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/admin/orders/:id/fulfill
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.post("/orders/:id/fulfill", async (req, res) => {
   try {
     const order = await OrderService.fulfill(req.params.id);
@@ -605,7 +774,11 @@ admin.post("/orders/:id/fulfill", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/admin/orders/:id/cancel
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.post("/orders/:id/cancel", async (req, res) => {
   try {
     const order = await OrderService.cancel(req.params.id);
@@ -613,8 +786,13 @@ admin.post("/orders/:id/cancel", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/admin/orders/:id/refund
 // Body: { amount, reason? }
+=======
+
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.post("/orders/:id/refund", async (req, res) => {
   try {
     const order = await OrderService.refund({
@@ -626,18 +804,22 @@ admin.post("/orders/:id/refund", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// ── Customers (admin) ─────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 // GET /api/v1/admin/customers/:id
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.get("/customers/:id", (req, res) => {
   try {
     res.json({ customer: AuthService.getById(req.params.id) });
   } catch (e) { handleErr(e, res); }
 });
 
-// ── Discounts (admin) ─────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 // GET /api/v1/admin/discounts
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.get("/discounts", async (req, res) => {
   try {
     const result = await DiscountService.list();
@@ -645,8 +827,11 @@ admin.get("/discounts", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/admin/discounts
 // Body: { code, type, value, min_subtotal?, max_uses?, expires_at? }
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.post("/discounts", async (req, res) => {
   try {
     const discount = await DiscountService.create(req.body);
@@ -654,7 +839,11 @@ admin.post("/discounts", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // DELETE /api/v1/admin/discounts/:id
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.delete("/discounts/:id", async (req, res) => {
   try {
     await DiscountService.delete(req.params.id);
@@ -662,9 +851,11 @@ admin.delete("/discounts/:id", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// ── Inventory (admin) ─────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 // GET /api/v1/admin/inventory
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.get("/inventory", async (req, res) => {
   try {
     const items = await InventoryService.listAll();
@@ -672,8 +863,11 @@ admin.get("/inventory", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // PATCH /api/v1/admin/inventory/:variantId
 // Body: { stocked_quantity }
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.patch("/inventory/:variantId", async (req, res) => {
   try {
     const item = await InventoryService.setStock(
@@ -684,9 +878,11 @@ admin.patch("/inventory/:variantId", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// ── Shipping (admin) ──────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 // GET /api/v1/admin/shipping-options
+=======
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.get("/shipping-options", async (req, res) => {
   try {
     const options = await ShippingService.listOptions();
@@ -694,18 +890,17 @@ admin.get("/shipping-options", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
+<<<<<<< HEAD
 // POST /api/v1/admin/shipping-options
+=======
+
+>>>>>>> d62d5290330e41a6f40d13e41110ad21d1db1761
 admin.post("/shipping-options", async (req, res) => {
   try {
     const option = await ShippingService.createOption(req.body);
     res.status(201).json({ shipping_option: option });
   } catch (e) { handleErr(e, res); }
 });
-
-// ══════════════════════════════════════════════════════════════════════════════
-// EVENT BUS — log all events in dev for easy debugging
-// ══════════════════════════════════════════════════════════════════════════════
-
 if (process.env.NODE_ENV !== "production") {
   // Subscribe to every event and log it
   const ALL_EVENTS = Object.values(EVENT);
@@ -716,23 +911,15 @@ if (process.env.NODE_ENV !== "production") {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// ERROR HANDLING
-// ══════════════════════════════════════════════════════════════════════════════
 
-// 404 handler — must be after all routes
 app.use((_req, res) => {
   res.status(404).json(err("NOT_FOUND", "Route not found"));
 });
 
-// Global error handler
+
 app.use((e: unknown, _req: Request, res: Response, _next: NextFunction) => {
   handleErr(e, res);
 });
-
-// ══════════════════════════════════════════════════════════════════════════════
-// START
-// ══════════════════════════════════════════════════════════════════════════════
 
 app.listen(PORT, () => {
   console.log(`
