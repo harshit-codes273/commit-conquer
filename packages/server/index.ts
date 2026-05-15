@@ -20,8 +20,8 @@
 //   NODE_ENV=development
 //
 // ─── Base URL ─────────────────────────────────────────────────────────────────
-//   Storefront: http://localhost:4000/api/store/
-//   Admin:      http://localhost:4000/api/admin/   (requires X-Admin-Secret header)
+//   Storefront: http://localhost:4000/api/v1/store/
+//   Admin:      http://localhost:4000/api/v1/admin/   (requires X-Admin-Secret header)
 //
 // ─── Integration with existing files ─────────────────────────────────────────
 //   All imports below pull directly from your existing module services.
@@ -167,16 +167,16 @@ app.get("/health", (_req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
-// STORE ROUTES  /api/store/*
+// STORE ROUTES  /api/v1/store/*
 // Public-facing storefront endpoints
 // ══════════════════════════════════════════════════════════════════════════════
 
 const store = express.Router();
-app.use("/api/store", store);
+app.use("/api/v1/store", store);
 
 // ── Products ──────────────────────────────────────────────────────────────────
 
-// GET /api/store/products
+// GET /api/v1/store/products
 // Query: offset, limit, category, search, sort, status
 store.get("/products", (req, res) => {
   try {
@@ -192,7 +192,7 @@ store.get("/products", (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// GET /api/store/products/:id
+// GET /api/v1/store/products/:id
 store.get("/products/:id", (req, res) => {
   try {
     const product = ProductService.getById(req.params.id);
@@ -200,7 +200,7 @@ store.get("/products/:id", (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// GET /api/store/products/handle/:handle
+// GET /api/v1/store/products/handle/:handle
 // Used by [handle]/page.tsx
 store.get("/products/handle/:handle", (req, res) => {
   try {
@@ -209,7 +209,7 @@ store.get("/products/handle/:handle", (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// GET /api/store/products/categories
+// GET /api/v1/store/products/categories
 store.get("/categories", (_req, res) => {
   try {
     res.json({ categories: ProductService.categories() });
@@ -218,7 +218,7 @@ store.get("/categories", (_req, res) => {
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
-// POST /api/store/auth/register
+// POST /api/v1/store/auth/register
 // Body: { email, password, first_name, last_name, phone? }
 store.post("/auth/register", async (req, res) => {
   try {
@@ -227,7 +227,7 @@ store.post("/auth/register", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/store/auth/login
+// POST /api/v1/store/auth/login
 // Body: { email, password }
 store.post("/auth/login", async (req, res) => {
   try {
@@ -236,7 +236,7 @@ store.post("/auth/login", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/store/auth/logout
+// POST /api/v1/store/auth/logout
 // Header: Authorization: Bearer <token>
 store.post("/auth/logout", authenticate, async (req, res) => {
   try {
@@ -246,13 +246,13 @@ store.post("/auth/logout", authenticate, async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// GET /api/store/auth/me
+// GET /api/v1/store/auth/me
 // Header: Authorization: Bearer <token>
 store.get("/auth/me", authenticate, (req, res) => {
   res.json({ customer: req.customer });
 });
 
-// PATCH /api/store/auth/me
+// PATCH /api/v1/store/auth/me
 // Body: { first_name?, last_name?, phone? }
 store.patch("/auth/me", authenticate, async (req, res) => {
   try {
@@ -261,7 +261,7 @@ store.patch("/auth/me", authenticate, async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/store/auth/reset-password/request
+// POST /api/v1/store/auth/reset-password/request
 // Body: { email }
 store.post("/auth/reset-password/request", async (req, res) => {
   try {
@@ -270,7 +270,7 @@ store.post("/auth/reset-password/request", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/store/auth/reset-password/confirm
+// POST /api/v1/store/auth/reset-password/confirm
 // Body: { reset_token, new_password }
 store.post("/auth/reset-password/confirm", async (req, res) => {
   try {
@@ -279,7 +279,7 @@ store.post("/auth/reset-password/confirm", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/store/auth/google
+// POST /api/v1/store/auth/google
 // Body: { credential: google_id_token }
 store.post("/auth/google", async (req, res) => {
   try {
@@ -290,7 +290,7 @@ store.post("/auth/google", async (req, res) => {
 
 // ── Cart ──────────────────────────────────────────────────────────────────────
 
-// POST /api/store/carts
+// POST /api/v1/store/carts
 // Body: { email? }
 // Returns the new cart. Store cart.id in frontend (localStorage / cookie).
 store.post("/carts", softAuthenticate, async (req, res) => {
@@ -300,7 +300,7 @@ store.post("/carts", softAuthenticate, async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// GET /api/store/carts/:id
+// GET /api/v1/store/carts/:id
 store.get("/carts/:id", (req, res) => {
   try {
     const cart = CartService.get(req.params.id);
@@ -308,7 +308,7 @@ store.get("/carts/:id", (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/store/carts/:id/items
+// POST /api/v1/store/carts/:id/items
 // Body: { product_id, variant_id, quantity? }
 store.post("/carts/:id/items", async (req, res) => {
   try {
@@ -318,7 +318,7 @@ store.post("/carts/:id/items", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// DELETE /api/store/carts/:id/items/:lineId
+// DELETE /api/v1/store/carts/:id/items/:lineId
 store.delete("/carts/:id/items/:lineId", async (req, res) => {
   try {
     const cart = await CartService.removeItem(req.params.id, req.params.lineId);
@@ -326,7 +326,7 @@ store.delete("/carts/:id/items/:lineId", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// PATCH /api/store/carts/:id/items/:lineId
+// PATCH /api/v1/store/carts/:id/items/:lineId
 // Body: { quantity }
 store.patch("/carts/:id/items/:lineId", async (req, res) => {
   try {
@@ -339,7 +339,7 @@ store.patch("/carts/:id/items/:lineId", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/store/carts/:id/discount
+// POST /api/v1/store/carts/:id/discount
 // Body: { code }
 store.post("/carts/:id/discount", async (req, res) => {
   try {
@@ -348,7 +348,7 @@ store.post("/carts/:id/discount", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// DELETE /api/store/carts/:id/discount
+// DELETE /api/v1/store/carts/:id/discount
 store.delete("/carts/:id/discount", async (req, res) => {
   try {
     const cart = await CartService.removeDiscount(req.params.id);
@@ -356,7 +356,7 @@ store.delete("/carts/:id/discount", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// PATCH /api/store/carts/:id/email
+// PATCH /api/v1/store/carts/:id/email
 // Body: { email }
 store.patch("/carts/:id/email", async (req, res) => {
   try {
@@ -365,7 +365,7 @@ store.patch("/carts/:id/email", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// PATCH /api/store/carts/:id/shipping-address
+// PATCH /api/v1/store/carts/:id/shipping-address
 // Body: Address object
 store.patch("/carts/:id/shipping-address", async (req, res) => {
   try {
@@ -374,7 +374,7 @@ store.patch("/carts/:id/shipping-address", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// PATCH /api/store/carts/:id/billing-address
+// PATCH /api/v1/store/carts/:id/billing-address
 store.patch("/carts/:id/billing-address", async (req, res) => {
   try {
     const cart = await CartService.setBillingAddress(req.params.id, req.body);
@@ -382,7 +382,7 @@ store.patch("/carts/:id/billing-address", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// GET /api/store/carts/:id/summary
+// GET /api/v1/store/carts/:id/summary
 store.get("/carts/:id/summary", (req, res) => {
   try {
     const summary = CartService.summary(req.params.id);
@@ -392,7 +392,7 @@ store.get("/carts/:id/summary", (req, res) => {
 
 // ── Shipping Options ──────────────────────────────────────────────────────────
 
-// GET /api/store/shipping-options
+// GET /api/v1/store/shipping-options
 // Query: cart_id (optional, for cart-specific rates)
 store.get("/shipping-options", async (req, res) => {
   try {
@@ -403,7 +403,7 @@ store.get("/shipping-options", async (req, res) => {
 
 // ── Orders ────────────────────────────────────────────────────────────────────
 
-// POST /api/store/orders
+// POST /api/v1/store/orders
 // Body: { cart_id, payment_provider? }
 // Converts a completed cart into an order
 store.post("/orders", softAuthenticate, async (req, res) => {
@@ -413,7 +413,7 @@ store.post("/orders", softAuthenticate, async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// GET /api/store/orders/:id
+// GET /api/v1/store/orders/:id
 // Requires auth — customers can only see their own orders
 store.get("/orders/:id", authenticate, (req, res) => {
   try {
@@ -427,7 +427,7 @@ store.get("/orders/:id", authenticate, (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// GET /api/store/customers/me/orders
+// GET /api/v1/store/customers/me/orders
 // List the logged-in customer's orders
 store.get("/customers/me/orders", authenticate, (req, res) => {
   try {
@@ -438,7 +438,7 @@ store.get("/customers/me/orders", authenticate, (req, res) => {
 
 // ── Payment ───────────────────────────────────────────────────────────────────
 
-// POST /api/store/payment/initiate
+// POST /api/v1/store/payment/initiate
 // Body: { order_id, amount, currency?, provider?, customer_email? }
 // Returns payment session with Stripe client_secret (if using Stripe)
 store.post("/payment/initiate", async (req, res) => {
@@ -448,7 +448,7 @@ store.post("/payment/initiate", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/store/payment/capture
+// POST /api/v1/store/payment/capture
 // Body: { session_id, order_id }
 store.post("/payment/capture", async (req, res) => {
   try {
@@ -459,7 +459,7 @@ store.post("/payment/capture", async (req, res) => {
 
 // ── Inventory ─────────────────────────────────────────────────────────────────
 
-// GET /api/store/inventory/:variantId
+// GET /api/v1/store/inventory/:variantId
 store.get("/inventory/:variantId", (req, res) => {
   try {
     const item = InventoryService.getByVariant(req.params.variantId);
@@ -468,17 +468,17 @@ store.get("/inventory/:variantId", (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ADMIN ROUTES  /api/admin/*
+// ADMIN ROUTES  /api/v1/admin/*
 // All admin routes require the X-Admin-Secret header.
 // ══════════════════════════════════════════════════════════════════════════════
 
 const admin = express.Router();
 admin.use(adminOnly);
-app.use("/api/admin", admin);
+app.use("/api/v1/admin", admin);
 
 // ── Dashboard stats ───────────────────────────────────────────────────────────
 
-// GET /api/admin/stats
+// GET /api/v1/admin/stats
 admin.get("/stats", (_req, res) => {
   try {
     const products = ProductService.stats();
@@ -489,7 +489,7 @@ admin.get("/stats", (_req, res) => {
 
 // ── Products (admin) ──────────────────────────────────────────────────────────
 
-// GET /api/admin/products
+// GET /api/v1/admin/products
 // Query: offset, limit, status (all|published|draft), category, search, sort
 admin.get("/products", (req, res) => {
   try {
@@ -505,14 +505,14 @@ admin.get("/products", (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// GET /api/admin/products/:id
+// GET /api/v1/admin/products/:id
 admin.get("/products/:id", (req, res) => {
   try {
     res.json({ product: ProductService.getById(req.params.id) });
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/admin/products
+// POST /api/v1/admin/products
 // Body: CreateProductInput
 admin.post("/products", async (req, res) => {
   try {
@@ -521,7 +521,7 @@ admin.post("/products", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// PATCH /api/admin/products/:id
+// PATCH /api/v1/admin/products/:id
 // Body: UpdateProductInput (partial)
 admin.patch("/products/:id", async (req, res) => {
   try {
@@ -530,7 +530,7 @@ admin.patch("/products/:id", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// DELETE /api/admin/products/:id
+// DELETE /api/v1/admin/products/:id
 admin.delete("/products/:id", async (req, res) => {
   try {
     const result = await ProductService.delete(req.params.id);
@@ -538,7 +538,7 @@ admin.delete("/products/:id", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// DELETE /api/admin/products  (bulk)
+// DELETE /api/v1/admin/products  (bulk)
 // Body: { ids: string[] }
 admin.delete("/products", async (req, res) => {
   try {
@@ -547,7 +547,7 @@ admin.delete("/products", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/admin/products/:id/publish
+// POST /api/v1/admin/products/:id/publish
 admin.post("/products/:id/publish", async (req, res) => {
   try {
     const product = await ProductService.publish(req.params.id);
@@ -555,7 +555,7 @@ admin.post("/products/:id/publish", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/admin/products/:id/unpublish
+// POST /api/v1/admin/products/:id/unpublish
 admin.post("/products/:id/unpublish", async (req, res) => {
   try {
     const product = await ProductService.unpublish(req.params.id);
@@ -563,7 +563,7 @@ admin.post("/products/:id/unpublish", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// PATCH /api/admin/products/:id/inventory
+// PATCH /api/v1/admin/products/:id/inventory
 // Body: { variant_id, delta }  (delta can be negative to decrement)
 admin.patch("/products/:id/inventory", async (req, res) => {
   try {
@@ -575,7 +575,7 @@ admin.patch("/products/:id/inventory", async (req, res) => {
 
 // ── Orders (admin) ────────────────────────────────────────────────────────────
 
-// GET /api/admin/orders
+// GET /api/v1/admin/orders
 // Query: offset, limit, status, search, sort
 admin.get("/orders", (req, res) => {
   try {
@@ -590,14 +590,14 @@ admin.get("/orders", (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// GET /api/admin/orders/:id
+// GET /api/v1/admin/orders/:id
 admin.get("/orders/:id", (req, res) => {
   try {
     res.json({ order: OrderService.getById(req.params.id) });
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/admin/orders/:id/fulfill
+// POST /api/v1/admin/orders/:id/fulfill
 admin.post("/orders/:id/fulfill", async (req, res) => {
   try {
     const order = await OrderService.fulfill(req.params.id);
@@ -605,7 +605,7 @@ admin.post("/orders/:id/fulfill", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/admin/orders/:id/cancel
+// POST /api/v1/admin/orders/:id/cancel
 admin.post("/orders/:id/cancel", async (req, res) => {
   try {
     const order = await OrderService.cancel(req.params.id);
@@ -613,7 +613,7 @@ admin.post("/orders/:id/cancel", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/admin/orders/:id/refund
+// POST /api/v1/admin/orders/:id/refund
 // Body: { amount, reason? }
 admin.post("/orders/:id/refund", async (req, res) => {
   try {
@@ -628,7 +628,7 @@ admin.post("/orders/:id/refund", async (req, res) => {
 
 // ── Customers (admin) ─────────────────────────────────────────────────────────
 
-// GET /api/admin/customers/:id
+// GET /api/v1/admin/customers/:id
 admin.get("/customers/:id", (req, res) => {
   try {
     res.json({ customer: AuthService.getById(req.params.id) });
@@ -637,7 +637,7 @@ admin.get("/customers/:id", (req, res) => {
 
 // ── Discounts (admin) ─────────────────────────────────────────────────────────
 
-// GET /api/admin/discounts
+// GET /api/v1/admin/discounts
 admin.get("/discounts", async (req, res) => {
   try {
     const result = await DiscountService.list();
@@ -645,7 +645,7 @@ admin.get("/discounts", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/admin/discounts
+// POST /api/v1/admin/discounts
 // Body: { code, type, value, min_subtotal?, max_uses?, expires_at? }
 admin.post("/discounts", async (req, res) => {
   try {
@@ -654,7 +654,7 @@ admin.post("/discounts", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// DELETE /api/admin/discounts/:id
+// DELETE /api/v1/admin/discounts/:id
 admin.delete("/discounts/:id", async (req, res) => {
   try {
     await DiscountService.delete(req.params.id);
@@ -664,7 +664,7 @@ admin.delete("/discounts/:id", async (req, res) => {
 
 // ── Inventory (admin) ─────────────────────────────────────────────────────────
 
-// GET /api/admin/inventory
+// GET /api/v1/admin/inventory
 admin.get("/inventory", async (req, res) => {
   try {
     const items = await InventoryService.listAll();
@@ -672,7 +672,7 @@ admin.get("/inventory", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// PATCH /api/admin/inventory/:variantId
+// PATCH /api/v1/admin/inventory/:variantId
 // Body: { stocked_quantity }
 admin.patch("/inventory/:variantId", async (req, res) => {
   try {
@@ -686,7 +686,7 @@ admin.patch("/inventory/:variantId", async (req, res) => {
 
 // ── Shipping (admin) ──────────────────────────────────────────────────────────
 
-// GET /api/admin/shipping-options
+// GET /api/v1/admin/shipping-options
 admin.get("/shipping-options", async (req, res) => {
   try {
     const options = await ShippingService.listOptions();
@@ -694,7 +694,7 @@ admin.get("/shipping-options", async (req, res) => {
   } catch (e) { handleErr(e, res); }
 });
 
-// POST /api/admin/shipping-options
+// POST /api/v1/admin/shipping-options
 admin.post("/shipping-options", async (req, res) => {
   try {
     const option = await ShippingService.createOption(req.body);
@@ -739,8 +739,8 @@ app.listen(PORT, () => {
   ┌──────────────────────────────────────────┐
   │   commit&conquer API                     │
   │                                          │
-  │   Store:  http://localhost:${PORT}/api/store  │
-  │   Admin:  http://localhost:${PORT}/api/admin  │
+  │   Store:  http://localhost:${PORT}/api/v1/store │
+  │   Admin:  http://localhost:${PORT}/api/v1/admin │
   │   Health: http://localhost:${PORT}/health     │
   │                                          │
   │   ENV: ${process.env.NODE_ENV ?? "development"}                     │
